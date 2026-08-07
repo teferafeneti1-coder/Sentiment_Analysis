@@ -14,20 +14,19 @@ st.set_page_config(
 )
 
 # ============================================================================
-# LOAD MODELS
+# LOAD MODELS WITH ERROR HANDLING
 # ============================================================================
 
 @st.cache_resource
 def load_models():
-    """Load trained models"""
+    """Load trained models with fallback"""
     try:
         model = joblib.load('best_model.pkl')
         vectorizer = joblib.load('vectorizer.pkl')
         encoder = joblib.load('encoder.pkl')
         return model, vectorizer, encoder
-    except FileNotFoundError:
-        # Try to download from GitHub if not found
-        st.warning("⚠️ Model files not found. Using sample data for demo.")
+    except Exception as e:
+        st.warning(f"⚠️ Model loading error: {str(e)[:100]}...")
         return None, None, None
 
 # ============================================================================
@@ -67,7 +66,7 @@ def predict_sentiment(text, model, vectorizer, encoder):
     return sentiment, confidence
 
 # ============================================================================
-# SAMPLE DATA FOR DEMO
+# SAMPLE TWEETS
 # ============================================================================
 
 SAMPLE_TWEETS = [
@@ -75,8 +74,6 @@ SAMPLE_TWEETS = [
     ("Worst airline ever. Flight delayed 5 hours. Terrible service.", "negative"),
     ("The flight was okay, nothing special.", "neutral"),
     ("Great service, very friendly staff!", "positive"),
-    ("Flight delayed again. I'm frustrated.", "negative"),
-    ("Average experience, typical airline.", "neutral")
 ]
 
 # ============================================================================
@@ -90,6 +87,15 @@ def main():
     
     model, vectorizer, encoder = load_models()
     
+    # Show warning if models not loaded
+    if model is None:
+        st.error("""
+        ⚠️ **Model not loaded!**
+        
+        Please make sure the model files are uploaded to the repository.
+        """)
+        return
+    
     # Sidebar
     with st.sidebar:
         st.header("📊 About")
@@ -101,11 +107,6 @@ def main():
         - **Accuracy:** 78.01%
         - **Training Data:** 11,602 tweets
         """)
-        
-        st.markdown("---")
-        st.markdown("### 📝 Example Tweets")
-        for text, sentiment in SAMPLE_TWEETS[:3]:
-            st.markdown(f"**{text[:30]}...** → `{sentiment}`")
     
     # Main content
     col1, col2 = st.columns([2, 1])
@@ -120,7 +121,7 @@ def main():
         
         analyze_button = st.button("🚀 Analyze Sentiment", type="primary")
         
-        if analyze_button and tweet and model is not None:
+        if analyze_button and tweet:
             sentiment, confidence = predict_sentiment(tweet, model, vectorizer, encoder)
             
             st.markdown("---")
@@ -133,25 +134,21 @@ def main():
             else:
                 st.warning(f"⚠️ **Sentiment: NEUTRAL** ({confidence:.1f}% confidence)")
                 
-        elif analyze_button and tweet and model is None:
-            st.error("❌ Model not loaded. Please check model files.")
         elif analyze_button and not tweet:
             st.warning("⚠️ Please enter a tweet first!")
     
     with col2:
         st.subheader("🔬 Quick Samples")
-        
         for i, (text, _) in enumerate(SAMPLE_TWEETS):
             if st.button(f"Sample {i+1}", key=f"sample_{i}"):
-                if model is not None:
-                    sentiment, confidence = predict_sentiment(text, model, vectorizer, encoder)
-                    if sentiment == "positive":
-                        st.success(f"✅ {sentiment.upper()}")
-                    elif sentiment == "negative":
-                        st.error(f"❌ {sentiment.upper()}")
-                    else:
-                        st.warning(f"⚠️ {sentiment.upper()}")
-                    st.caption(f"📝 {text[:50]}...")
+                sentiment, confidence = predict_sentiment(text, model, vectorizer, encoder)
+                if sentiment == "positive":
+                    st.success(f"✅ {sentiment.upper()}")
+                elif sentiment == "negative":
+                    st.error(f"❌ {sentiment.upper()}")
+                else:
+                    st.warning(f"⚠️ {sentiment.upper()}")
+                st.caption(f"📝 {text[:50]}...")
 
 if __name__ == "__main__":
     main()
