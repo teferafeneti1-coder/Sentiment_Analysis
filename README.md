@@ -3,7 +3,7 @@
 Real-time sentiment analysis of airline tweets using Machine Learning.
 
 ## 🚀 Live Demo
-[https://your-app-name.streamlit.app](https://your-app-name.streamlit.app)
+[https://your-app-name.streamlit.app](https://sentimentanalysis-emerging.streamlit.app/)
 
 ## 📊 Model Performance
 - **Accuracy:** 78.01%
