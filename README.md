@@ -14,5 +14,3 @@ Real-time sentiment analysis of airline tweets using Machine Learning.
 1. Enter a tweet about an airline
 2. Click "Analyze Sentiment"
 3. Get instant sentiment prediction (Positive, Neutral, Negative)
-
-## 📁 Project Structure
